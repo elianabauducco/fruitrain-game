@@ -1,15 +1,16 @@
+import End from "./scenes/End.js";
 import Game from "./scenes/Game.js";
 
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 600,
+    height: 700,
     scale: {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
       min: {
-        width: 800,
-        height: 600,
+        width: 600,
+        height: 700,
       },
       max: {
         width: 1600,
@@ -19,11 +20,11 @@ const config = {
     physics: {
       default: "arcade",
       arcade: {
-        gravity: { y: 200 },
+        gravity: { y: 200, },
         debug: false,
       },
     },
-    scene: [Game],
+    scene: [Game,End],
 };
 
 window.game = new Phaser.Game(config);

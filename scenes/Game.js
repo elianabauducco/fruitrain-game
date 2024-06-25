@@ -5,7 +5,6 @@ export default class Game extends Phaser.Scene {
 
     init() {
         this.gameOver = false;
-        this.score = 0;
         this.shapes = {
             limon: { count: 0, points: 10 },
             banana: { count: 0, points: 10 },
@@ -29,12 +28,12 @@ export default class Game extends Phaser.Scene {
         this.load.image("L", "./public/assets/L.png");
         this.load.image("N", "./public/assets/N.png");
 
-        //imágenes de botones
+        // imágenes de botones
         this.load.image("ORButton", "public/assets/ORButton.png");
         this.load.image("backButton", "public/assets/backButton.png");
         this.load.image("REButton", "public/assets/REButton.png");
 
-        //imagenes pop-ups
+        // imágenes pop-ups
         this.load.image("popupOR", "public/assets/popupOR.png");
         this.load.image("popupRE", "public/assets/popupRE.png");
     }
@@ -78,7 +77,7 @@ export default class Game extends Phaser.Scene {
         this.physics.add.collider(
             this.recolectables,
             this.rectangulo,
-            this.onRecolectableBounced,
+            this.onRecolectableHitPlatform,
             null,
             this
         );
@@ -89,24 +88,29 @@ export default class Game extends Phaser.Scene {
         this.lImage = this.add.image(30, 140, "L").setScale(0.3).setVisible(true);
         this.nImage = this.add.image(30, 190, "N").setScale(0.2).setVisible(true);
 
-        // Inicializar contadores
+        // contadores de frutas
         this.shapes["frutilla"].image = this.fImage;
         this.shapes["banana"].image = this.bImage;
         this.shapes["limon"].image = this.lImage;
         this.shapes["naranja"].image = this.nImage;
 
-        //grupo de pop-ups
+        this.shapes["frutilla"].text = this.add.text(50, 50, '0', { fontSize: '32px', fill: '#000' });
+        this.shapes["banana"].text = this.add.text(50, 90, '0', { fontSize: '32px', fill: '#000' });
+        this.shapes["limon"].text = this.add.text(50, 140, '0', { fontSize: '32px', fill: '#000' });
+        this.shapes["naranja"].text = this.add.text(50, 190, '0', { fontSize: '32px', fill: '#000' });
+
+        // grupo de pop-ups
         this.popups = this.add.group();
 
-        //boton de pedidos
+        // botón de pedidos
         this.ORButton = this.add.image(560, 150, "ORButton").setInteractive().setScale(0.5).setVisible(true);
         this.ORButton.on('pointerup', () => this.showPopup('OR'), this);
 
-        //boton de recetas
+        // botón de recetas
         this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(0.4).setVisible(true);
         this.REButton.on('pointerup', () => this.showPopup('RE'), this);
 
-        //pop-ups pero mantenerlos ocultos inicialmente
+        // pop-ups pero mantenerlos ocultos inicialmente
         this.popupOR = this.add.image(300, 300, "popupOR").setVisible(false).setDepth(2).setScale(1.7);
         this.popupRE = this.add.image(300, 300, "popupRE").setVisible(false).setDepth(2).setScale(1.7);
         this.backButton = this.add.image(300, 390, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
@@ -121,7 +125,6 @@ export default class Game extends Phaser.Scene {
         }
         if (this.gameOver) {
             this.physics.pause();
-            this.scoreText.setText("Game Over");
             return;
         }
 
@@ -132,6 +135,13 @@ export default class Game extends Phaser.Scene {
         } else {
             this.personaje.setVelocityX(0);
         }
+
+        // Lógica para destruir recolectables al tocar la plataforma
+        this.recolectables.getChildren().forEach(recolectable => {
+            if (recolectable.y > this.rectangulo.y) {
+                recolectable.destroy();
+            }
+        });
     }
 
     onSecond() {
@@ -152,50 +162,27 @@ export default class Game extends Phaser.Scene {
         recolectable.setData("tipo", tipo);
     }
 
-    createPopup(text, x, y) {
-        const popup = this.add.text(x, y, text, { fontSize: '32px', fill: '#000000', backgroundColor: '#ffffff' })
-            .setOrigin(0.5)
-            .setPadding(10)
-            .setDepth(1); 
-
-        this.popups.add(popup);
-
-        // Animar el pop-up
-        this.tweens.add({
-            targets: popup,
-            alpha: { from: 1, to: 0 },
-            y: y - 50,
-            ease: 'Cubic.easeOut',
-            duration: 1000,
-            onComplete: () => {
-                popup.destroy();
-            }
-        });
-    }
-
     onShapeCollect(personaje, recolectable) {
         const nombreFig = recolectable.getData("tipo");
         const points = recolectable.getData("points");
 
-        this.score += points;
         this.shapes[nombreFig].count += 1;
-
-        console.table(this.shapes);
-        console.log("recolectado ", recolectable.texture.key, points);
-        console.log("score ", this.score);
         recolectable.destroy();
 
-        this.scoreText.setText(`Puntaje: ${this.score}`);
-
-        // Mostrar el pop-up de puntos
-        this.createPopup(`+${points} pts`, recolectable.x, recolectable.y);
+        // actualizar contador de frutas
+        this.shapes[nombreFig].text.setText(this.shapes[nombreFig].count);
 
         const shape = this.shapes[nombreFig];
         if (shape.count > 0) {
             shape.image.setVisible(true);
         }
-        
+
+        this.checkOrderCompletion();
         this.checkWin();
+    }
+
+    onRecolectableHitPlatform(recolectable, platform) {
+        recolectable.destroy();
     }
 
     showPopup(type) {
@@ -216,12 +203,13 @@ export default class Game extends Phaser.Scene {
     }
 
     checkWin() {
-        const cumplePuntos = this.score >= 100;
         const cumpleFiguras = this.shapes.limon.count > 0 && this.shapes.banana.count > 0 && this.shapes.naranja.count > 0 && this.shapes.frutilla.count > 0;
 
-        if (cumplePuntos && cumpleFiguras) {
+        if (cumpleFiguras) {
             this.gameOver = true;
         }
     }
 }
+
+
 

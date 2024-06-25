@@ -6,10 +6,10 @@ export default class Game extends Phaser.Scene {
     init() {
         this.gameOver = false;
         this.shapes = {
-            limon: { count: 0, points: 10 },
-            banana: { count: 0, points: 10 },
-            naranja: { count: 0, points: 10 },
-            frutilla: { count: 0, points: 10 },
+            limon: { count: 0, points: 0 },
+            banana: { count: 0, points: 0 },
+            naranja: { count: 0, points: 0 },
+            frutilla: { count: 0, points: 0 },
         };
     }
 
@@ -25,7 +25,7 @@ export default class Game extends Phaser.Scene {
 
         this.load.image("F", "./public/assets/F.png");
         this.load.image("B", "./public/assets/B.png");
-        this.load.image("L", "./public/assets/L.png");
+        this.load.image("L", "./public/assets/L.png");  
         this.load.image("N", "./public/assets/N.png");
 
         // imágenes de botones
@@ -48,7 +48,7 @@ export default class Game extends Phaser.Scene {
         this.rectangulo = this.physics.add.staticGroup();
         this.rectangulo.create(400, 690, "rectangulo").setScale(1.2).refreshBody();
 
-        this.personaje = this.physics.add.sprite(400, 100, "personaje");
+        this.personaje = this.physics.add.sprite(400, 565, "personaje");
         this.personaje.setScale(0.6);
 
         this.physics.add.collider(this.personaje, this.rectangulo);
@@ -57,13 +57,7 @@ export default class Game extends Phaser.Scene {
 
         this.recolectables = this.physics.add.group();
 
-        this.physics.add.collider(
-            this.personaje,
-            this.recolectables,
-            this.onShapeCollect,
-            null,
-            this
-        );
+        this.physics.add.overlap(this.personaje, this.recolectables, this.onShapeCollect, null, this);
 
         this.time.addEvent({
             delay: 1000,
@@ -81,6 +75,7 @@ export default class Game extends Phaser.Scene {
             null,
             this
         );
+
 
         // imágenes de las iniciales
         this.fImage = this.add.image(30, 50, "F").setScale(0.3).setVisible(true);
@@ -110,7 +105,7 @@ export default class Game extends Phaser.Scene {
         this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(0.4).setVisible(true);
         this.REButton.on('pointerup', () => this.showPopup('RE'), this);
 
-        // pop-ups pero mantenerlos ocultos inicialmente
+        // pop-ups pero ocultos inicialmente
         this.popupOR = this.add.image(300, 300, "popupOR").setVisible(false).setDepth(2).setScale(1.7);
         this.popupRE = this.add.image(300, 300, "popupRE").setVisible(false).setDepth(2).setScale(1.7);
         this.backButton = this.add.image(300, 390, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
@@ -136,7 +131,8 @@ export default class Game extends Phaser.Scene {
             this.personaje.setVelocityX(0);
         }
 
-        // Lógica para destruir recolectables al tocar la plataforma
+        
+        //destruir recolectables al tocar la plataforma
         this.recolectables.getChildren().forEach(recolectable => {
             if (recolectable.y > this.rectangulo.y) {
                 recolectable.destroy();
@@ -155,29 +151,26 @@ export default class Game extends Phaser.Scene {
             0,
             tipo
         );
-        recolectable.setVelocity(0, 100);
-        recolectable.setScale(0.10);
+        recolectable.setVelocity(0, 230);
+        recolectable.setScale(0.30);
 
         recolectable.setData("points", this.shapes[tipo].points);
         recolectable.setData("tipo", tipo);
     }
 
     onShapeCollect(personaje, recolectable) {
-        const nombreFig = recolectable.getData("tipo");
-        const points = recolectable.getData("points");
-
-        this.shapes[nombreFig].count += 1;
+        const tipo = recolectable.getData("tipo");
+        this.shapes[tipo].count += 1;
         recolectable.destroy();
 
-        // actualizar contador de frutas
-        this.shapes[nombreFig].text.setText(this.shapes[nombreFig].count);
+        // contador de frutas
+        this.shapes[tipo].text.setText(this.shapes[tipo].count);
 
-        const shape = this.shapes[nombreFig];
+        const shape = this.shapes[tipo];
         if (shape.count > 0) {
             shape.image.setVisible(true);
         }
 
-        this.checkOrderCompletion();
         this.checkWin();
     }
 
@@ -203,11 +196,7 @@ export default class Game extends Phaser.Scene {
     }
 
     checkWin() {
-        const cumpleFiguras = this.shapes.limon.count > 0 && this.shapes.banana.count > 0 && this.shapes.naranja.count > 0 && this.shapes.frutilla.count > 0;
-
-        if (cumpleFiguras) {
-            this.gameOver = true;
-        }
+        // Implementación de lógica para verificar si se ganó el juego
     }
 }
 

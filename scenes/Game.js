@@ -32,9 +32,11 @@ export default class Game extends Phaser.Scene {
         //imágenes de botones
         this.load.image("ORButton", "public/assets/ORButton.png");
         this.load.image("backButton", "public/assets/backButton.png");
+        this.load.image("REButton", "public/assets/REButton.png");
 
         //imagenes pop-ups
         this.load.image("popupOR", "public/assets/popupOR.png");
+        this.load.image("popupRE", "public/assets/popupRE.png");
     }
 
     create() {
@@ -81,8 +83,7 @@ export default class Game extends Phaser.Scene {
             this
         );
 
-
-        // Crear las imágenes de las iniciales
+        // imágenes de las iniciales
         this.fImage = this.add.image(30, 50, "F").setScale(0.3).setVisible(true);
         this.bImage = this.add.image(30, 90, "B").setScale(0.4).setVisible(true);
         this.lImage = this.add.image(30, 140, "L").setScale(0.3).setVisible(true);
@@ -94,17 +95,24 @@ export default class Game extends Phaser.Scene {
         this.shapes["limon"].image = this.lImage;
         this.shapes["naranja"].image = this.nImage;
 
-        // Crear el grupo de pop-ups
+        //grupo de pop-ups
         this.popups = this.add.group();
 
-        // Crear botón de información
+        //boton de pedidos
         this.ORButton = this.add.image(560, 150, "ORButton").setInteractive().setScale(0.5).setVisible(true);
-        this.ORButton.on('pointerdown', this.showPopup, this);
+        this.ORButton.on('pointerup', () => this.showPopup('OR'), this);
 
-        // Crear el pop-up pero mantenerlo oculto inicialmente
-        this.popupOR = this.add.image(300, 300 , "popupOR").setVisible(false).setDepth(2).setScale(1.7)
+        //boton de recetas
+        this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(0.4).setVisible(true);
+        this.REButton.on('pointerup', () => this.showPopup('RE'), this);
+
+        //pop-ups pero mantenerlos ocultos inicialmente
+        this.popupOR = this.add.image(300, 300, "popupOR").setVisible(false).setDepth(2).setScale(1.7);
+        this.popupRE = this.add.image(300, 300, "popupRE").setVisible(false).setDepth(2).setScale(1.7);
         this.backButton = this.add.image(300, 390, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
         this.backButton.on('pointerdown', this.hidePopup, this);
+        this.backREButton = this.add.image(300, 390, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
+        this.backREButton.on('pointerdown', this.hidePopup, this);
     }
 
     update() {
@@ -148,7 +156,7 @@ export default class Game extends Phaser.Scene {
         const popup = this.add.text(x, y, text, { fontSize: '32px', fill: '#000000', backgroundColor: '#ffffff' })
             .setOrigin(0.5)
             .setPadding(10)
-            .setDepth(1); // Asegúrate de que el pop-up esté por encima de otros elementos
+            .setDepth(1); 
 
         this.popups.add(popup);
 
@@ -190,16 +198,21 @@ export default class Game extends Phaser.Scene {
         this.checkWin();
     }
 
-    showPopup() {
-        this.popup.setVisible(true);
-        this.popupText.setVisible(true);
-        this.closeButton.setVisible(true);
+    showPopup(type) {
+        if (type === 'OR') {
+            this.popupOR.setVisible(true);
+            this.backButton.setVisible(true);
+        } else if (type === 'RE') {
+            this.popupRE.setVisible(true);
+            this.backREButton.setVisible(true);
+        }
     }
 
     hidePopup() {
-        this.popup.setVisible(false);
-        this.popupText.setVisible(false);
-        this.closeButton.setVisible(false);
+        this.popupOR.setVisible(false);
+        this.popupRE.setVisible(false);
+        this.backButton.setVisible(false);
+        this.backREButton.setVisible(false);
     }
 
     checkWin() {
@@ -211,3 +224,4 @@ export default class Game extends Phaser.Scene {
         }
     }
 }
+

@@ -194,10 +194,6 @@ export default class Game extends Phaser.Scene {
         this.backButton.setVisible(false);
         this.backREButton.setVisible(false);
     }
-
-    checkWin() {
-        // Implementación de lógica para verificar si se ganó el juego
-    }
 }
 
 

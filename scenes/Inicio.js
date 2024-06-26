@@ -17,7 +17,7 @@ export default class Inicio extends Phaser.Scene {
         
         startButton.setInteractive({cursor: 'pointer'});
         startButton.on('pointerover', () => {
-            startButton.setSCale(0.45);
+            startButton.setScale(0.45);
         });
 
         startButton.on ('pointerdown', () => {

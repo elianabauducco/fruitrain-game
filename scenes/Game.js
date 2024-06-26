@@ -5,11 +5,12 @@ export default class Game extends Phaser.Scene {
 
     init() {
         this.gameOver = false;
+        this.limiteFrutas = 10; // Establecer el límite de frutas
         this.shapes = {
-            limon: { count: 0, points: 0 },
-            banana: { count: 0, points: 0 },
-            naranja: { count: 0, points: 0 },
-            frutilla: { count: 0, points: 0 },
+            limon: { count: 0, points: 0, limit: this.limiteFrutas },
+            banana: { count: 0, points: 0, limit: this.limiteFrutas },
+            naranja: { count: 0, points: 0, limit: this.limiteFrutas },
+            frutilla: { count: 0, points: 0, limit: this.limiteFrutas },
         };
     }
 
@@ -28,14 +29,13 @@ export default class Game extends Phaser.Scene {
         this.load.image("L", "./public/assets/L.png");  
         this.load.image("N", "./public/assets/N.png");
 
-        // imágenes de botones
         this.load.image("ORButton", "public/assets/ORButton.png");
         this.load.image("backButton", "public/assets/backButton.png");
         this.load.image("REButton", "public/assets/REButton.png");
 
-        // imágenes pop-ups
         this.load.image("popupOR", "public/assets/popupOR.png");
         this.load.image("popupRE", "public/assets/popupRE.png");
+
     }
 
     create() {
@@ -76,7 +76,6 @@ export default class Game extends Phaser.Scene {
             this
         );
 
-
         // imágenes de las iniciales
         this.fImage = this.add.image(30, 50, "F").setScale(0.3).setVisible(true);
         this.bImage = this.add.image(30, 90, "B").setScale(0.4).setVisible(true);
@@ -89,10 +88,10 @@ export default class Game extends Phaser.Scene {
         this.shapes["limon"].image = this.lImage;
         this.shapes["naranja"].image = this.nImage;
 
-        this.shapes["frutilla"].text = this.add.text(50, 50, '0', { fontSize: '32px', fill: '#000' });
-        this.shapes["banana"].text = this.add.text(50, 90, '0', { fontSize: '32px', fill: '#000' });
-        this.shapes["limon"].text = this.add.text(50, 140, '0', { fontSize: '32px', fill: '#000' });
-        this.shapes["naranja"].text = this.add.text(50, 190, '0', { fontSize: '32px', fill: '#000' });
+        this.shapes["frutilla"].text = this.add.text(70, 40, '0', { fontSize: '35px', fill: '#000' });
+        this.shapes["banana"].text = this.add.text(70, 80, '0', { fontSize: '35px', fill: '#000' });
+        this.shapes["limon"].text = this.add.text(70, 130, '0', { fontSize: '35px', fill: '#000' });
+        this.shapes["naranja"].text = this.add.text(70, 180, '0', { fontSize: '35px', fill: '#000' });
 
         // grupo de pop-ups
         this.popups = this.add.group();
@@ -101,7 +100,7 @@ export default class Game extends Phaser.Scene {
         this.ORButton = this.add.image(560, 150, "ORButton").setInteractive().setScale(0.5).setVisible(true);
         this.ORButton.on('pointerup', () => this.showPopup('OR'), this);
 
-        // botón de recetas
+        // botón de recetas 
         this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(0.4).setVisible(true);
         this.REButton.on('pointerup', () => this.showPopup('RE'), this);
 
@@ -131,8 +130,7 @@ export default class Game extends Phaser.Scene {
             this.personaje.setVelocityX(0);
         }
 
-        
-        //destruir recolectables al tocar la plataforma
+        // destruir recolectables al tocar la plataforma
         this.recolectables.getChildren().forEach(recolectable => {
             if (recolectable.y > this.rectangulo.y) {
                 recolectable.destroy();
@@ -160,18 +158,27 @@ export default class Game extends Phaser.Scene {
 
     onShapeCollect(personaje, recolectable) {
         const tipo = recolectable.getData("tipo");
-        this.shapes[tipo].count += 1;
-        recolectable.destroy();
+        const shape = this.shapes[tipo];
+
+        // Verificar si el límite ha sido alcanzado
+        if (shape.count < shape.limit) {
+            shape.count += 1;
+            recolectable.destroy();
+            shape.text.setText(shape.count);
+        } else {
+            recolectable.destroy(); // Destruir recolectable si se ha alcanzado el límite
+        }
 
         // contador de frutas
-        this.shapes[tipo].text.setText(this.shapes[tipo].count);
-
-        const shape = this.shapes[tipo];
         if (shape.count > 0) {
             shape.image.setVisible(true);
         }
 
-        this.checkWin();
+        // Si se alcanzó el límite, mostrar algún mensaje o realizar alguna acción
+        if (shape.count === shape.limit) {
+            console.log(`Has recolectado el máximo de ${tipo}s`);
+            // Aquí puedes agregar alguna lógica adicional si lo deseas
+        }
     }
 
     onRecolectableHitPlatform(recolectable, platform) {

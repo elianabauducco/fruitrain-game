@@ -32,6 +32,7 @@ export default class Game extends Phaser.Scene {
         this.load.image("ORButton", "public/assets/ORButton.png");
         this.load.image("backButton", "public/assets/backButton.png");
         this.load.image("REButton", "public/assets/REButton.png");
+        this.load.image("menuButton", "public/assets/menuButton.png");
 
         this.load.image("popupOR", "public/assets/popupOR.png");
         this.load.image("popupRE", "public/assets/popupRE.png");
@@ -77,10 +78,10 @@ export default class Game extends Phaser.Scene {
         );
 
         // imágenes de las iniciales
-        this.fImage = this.add.image(30, 50, "F").setScale(0.3).setVisible(true);
-        this.bImage = this.add.image(30, 90, "B").setScale(0.4).setVisible(true);
-        this.lImage = this.add.image(30, 140, "L").setScale(0.3).setVisible(true);
-        this.nImage = this.add.image(30, 190, "N").setScale(0.2).setVisible(true);
+        this.fImage = this.add.image(30, 50, "F").setScale(0.7).setVisible(true);
+        this.bImage = this.add.image(30, 90, "B").setScale(0.8).setVisible(true);
+        this.lImage = this.add.image(30, 140, "L").setScale(0.8).setVisible(true);
+        this.nImage = this.add.image(30, 190, "N").setScale(0.7).setVisible(true);
 
         // contadores de frutas
         this.shapes["frutilla"].image = this.fImage;
@@ -96,21 +97,65 @@ export default class Game extends Phaser.Scene {
         // grupo de pop-ups
         this.popups = this.add.group();
 
+        //boton de menu
+        this.menuButton = this.add.image(550, 40, "menuButton").setInteractive().setScale(0.12).setVisible(true);
+        this.menuButton.on('pointerover', () => {
+            this.menuButton.setScale(0.10);
+        });
+
+        this.menuButton.on('pointerout', () => {
+            this.menuButton.setScale(0.12);
+        })
+
+        this.menuButton.on ('pointerdown', () => {
+            this.scene.start('Inicio');
+
+        });
+
         // botón de pedidos
-        this.ORButton = this.add.image(560, 150, "ORButton").setInteractive().setScale(0.5).setVisible(true);
+        this.ORButton = this.add.image(560, 150, "ORButton").setInteractive().setScale(1).setVisible(true);
         this.ORButton.on('pointerup', () => this.showPopup('OR'), this);
+        this.ORButton.on('pointerover', () => {
+            this.ORButton.setScale(0.95);
+        });
+
+        this.ORButton.on('pointerout', () => {
+            this.ORButton.setScale(1);
+        })
 
         // botón de recetas 
-        this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(0.4).setVisible(true);
+        this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(1).setVisible(true);
         this.REButton.on('pointerup', () => this.showPopup('RE'), this);
+        this.REButton.setInteractive({cursor: 'pointer'});
+        this.REButton.on('pointerover', () => {
+            this.REButton.setScale(0.95);
+        });
+
+        this.REButton.on('pointerout', () => {
+            this.REButton.setScale(1);
+        })
 
         // pop-ups pero ocultos inicialmente
-        this.popupOR = this.add.image(300, 300, "popupOR").setVisible(false).setDepth(2).setScale(1.7);
-        this.popupRE = this.add.image(300, 300, "popupRE").setVisible(false).setDepth(2).setScale(1.7);
-        this.backButton = this.add.image(300, 390, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
+        this.popupOR = this.add.image(300, 300, "popupOR").setVisible(false).setDepth(2).setScale(1.9);
+        this.popupRE = this.add.image(300, 300, "popupRE").setVisible(false).setDepth(2).setScale(1.9);
+        this.backButton = this.add.image(300, 440, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
         this.backButton.on('pointerdown', this.hidePopup, this);
-        this.backREButton = this.add.image(300, 390, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
+        this.backButton.on('pointerover', () => {
+            this.backButton.setScale(0.75);
+        });
+
+        this.backButton.on('pointerout', () => {
+            this.backButton.setScale(0.8);
+        })
+        this.backREButton = this.add.image(300, 400, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
         this.backREButton.on('pointerdown', this.hidePopup, this);
+        this.backREButton.on('pointerover', () => {
+            this.backREButton.setScale(0.75);
+        });
+
+        this.backREButton.on('pointerout', () => {
+            this.backREButton.setScale(0.8);
+        })
     }
 
     update() {
@@ -150,7 +195,7 @@ export default class Game extends Phaser.Scene {
             tipo
         );
         recolectable.setVelocity(0, 230);
-        recolectable.setScale(0.30);
+        recolectable.setScale(1);
 
         recolectable.setData("points", this.shapes[tipo].points);
         recolectable.setData("tipo", tipo);
@@ -160,13 +205,12 @@ export default class Game extends Phaser.Scene {
         const tipo = recolectable.getData("tipo");
         const shape = this.shapes[tipo];
 
-        // Verificar si el límite ha sido alcanzado
         if (shape.count < shape.limit) {
             shape.count += 1;
             recolectable.destroy();
             shape.text.setText(shape.count);
         } else {
-            recolectable.destroy(); // Destruir recolectable si se ha alcanzado el límite
+            recolectable.destroy(); //desaparece fruta si alcanza el límite
         }
 
         // contador de frutas
@@ -174,11 +218,6 @@ export default class Game extends Phaser.Scene {
             shape.image.setVisible(true);
         }
 
-        // Si se alcanzó el límite, mostrar algún mensaje o realizar alguna acción
-        if (shape.count === shape.limit) {
-            console.log(`Has recolectado el máximo de ${tipo}s`);
-            // Aquí puedes agregar alguna lógica adicional si lo deseas
-        }
     }
 
     onRecolectableHitPlatform(recolectable, platform) {

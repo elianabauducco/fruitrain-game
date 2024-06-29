@@ -21,7 +21,7 @@ export default class Inicio extends Phaser.Scene {
         this.recolectables = this.physics.add.group();
 
         this.time.addEvent({
-            delay: 900,
+            delay: 800,
             callback: this.onSecond,
             callbackScope: this,
             loop: true,
@@ -58,7 +58,7 @@ export default class Inicio extends Phaser.Scene {
             0,
             tipo
         );
-        recolectable.setVelocity(0, 230);
+        recolectable.setVelocity(0, 250);
         recolectable.setScale(1);
     }
 }

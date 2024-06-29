@@ -12,6 +12,14 @@ export default class Game extends Phaser.Scene {
             naranja: { count: 0, points: 0, limit: this.limiteFrutas },
             frutilla: { count: 0, points: 0, limit: this.limiteFrutas },
         };
+
+        this.pedidos = [
+            { name: "Batido de Frutilla", type: "frutilla", required: 5, image: "batidoFrutilla" },
+            { name: "Batido de Banana", type: "banana", required: 3, image: "batidoBanana" },
+            { name: "Jugo de Naranja", type: "naranja", required: 4, image: "jugoNaranja" },
+            { name: "Limonada", type: "limon", required: 2, image: "limonada" }
+        ];
+        this.pedidoActual = null;
     }
 
     preload() {
@@ -26,8 +34,13 @@ export default class Game extends Phaser.Scene {
 
         this.load.image("F", "./public/assets/F.png");
         this.load.image("B", "./public/assets/B.png");
-        this.load.image("L", "./public/assets/L.png");  
+        this.load.image("L", "./public/assets/L.png");
         this.load.image("N", "./public/assets/N.png");
+
+        this.load.image("batidoFrutilla", "public/assets/frutOR.png");
+        this.load.image("batidoBanana", "public/assets/banOR.png");
+        this.load.image("jugoNaranja", "public/assets/narOR.png");
+        this.load.image("limonada", "public/assets/limOR.png");
 
         this.load.image("ORButton", "public/assets/ORButton.png");
         this.load.image("backButton", "public/assets/backButton.png");
@@ -36,7 +49,6 @@ export default class Game extends Phaser.Scene {
 
         this.load.image("popupOR", "public/assets/popupOR.png");
         this.load.image("popupRE", "public/assets/popupRE.png");
-
     }
 
     create() {
@@ -97,7 +109,7 @@ export default class Game extends Phaser.Scene {
         // grupo de pop-ups
         this.popups = this.add.group();
 
-        //boton de menu
+        // botón de menú
         this.menuButton = this.add.image(550, 40, "menuButton").setInteractive().setScale(0.12).setVisible(true);
         this.menuButton.on('pointerover', () => {
             this.menuButton.setScale(0.10);
@@ -105,11 +117,10 @@ export default class Game extends Phaser.Scene {
 
         this.menuButton.on('pointerout', () => {
             this.menuButton.setScale(0.12);
-        })
+        });
 
-        this.menuButton.on ('pointerdown', () => {
+        this.menuButton.on('pointerdown', () => {
             this.scene.start('Inicio');
-
         });
 
         // botón de pedidos
@@ -121,19 +132,19 @@ export default class Game extends Phaser.Scene {
 
         this.ORButton.on('pointerout', () => {
             this.ORButton.setScale(1);
-        })
+        });
 
-        // botón de recetas 
+        // botón de recetas
         this.REButton = this.add.image(60, 650, "REButton").setInteractive().setScale(1).setVisible(true);
         this.REButton.on('pointerup', () => this.showPopup('RE'), this);
-        this.REButton.setInteractive({cursor: 'pointer'});
+        this.REButton.setInteractive({ cursor: 'pointer' });
         this.REButton.on('pointerover', () => {
             this.REButton.setScale(0.95);
         });
 
         this.REButton.on('pointerout', () => {
             this.REButton.setScale(1);
-        })
+        });
 
         // pop-ups pero ocultos inicialmente
         this.popupOR = this.add.image(300, 300, "popupOR").setVisible(false).setDepth(2).setScale(1.9);
@@ -146,7 +157,8 @@ export default class Game extends Phaser.Scene {
 
         this.backButton.on('pointerout', () => {
             this.backButton.setScale(0.8);
-        })
+        });
+
         this.backREButton = this.add.image(300, 400, "backButton").setInteractive().setScale(0.8).setVisible(false).setDepth(2);
         this.backREButton.on('pointerdown', this.hidePopup, this);
         this.backREButton.on('pointerover', () => {
@@ -155,7 +167,28 @@ export default class Game extends Phaser.Scene {
 
         this.backREButton.on('pointerout', () => {
             this.backREButton.setScale(0.8);
-        })
+        });
+
+        this.pedidoImagenOR = this.add.image(300, 300, "").setVisible(false).setDepth(3).setScale(0.6);
+
+        this.time.addEvent({
+            delay: 10500,
+            callback: this.generarPedido,
+            callbackScope: this,
+            loop: true,
+        });
+    }
+
+    generarPedido() {
+        const pedido = Phaser.Math.RND.pick(this.pedidos);
+        this.pedidoActual = pedido;
+        this.mostrarPedido();
+    }
+
+    mostrarPedido() {
+        if (this.pedidoImagenOR) {
+            this.pedidoImagenOR.setTexture(this.pedidoActual.image).setVisible(true);
+        }
     }
 
     update() {
@@ -209,15 +242,35 @@ export default class Game extends Phaser.Scene {
             shape.count += 1;
             recolectable.destroy();
             shape.text.setText(shape.count);
+
+            if (this.pedidoActual && tipo === this.pedidoActual.type) {
+                if (shape.count >= this.pedidoActual.required) {
+                    this.pedidoCompleto();
+                }
+            }
+
         } else {
-            recolectable.destroy(); //desaparece fruta si alcanza el límite
+            recolectable.destroy(); // desaparece fruta si alcanza el límite
         }
 
         // contador de frutas
         if (shape.count > 0) {
             shape.image.setVisible(true);
         }
+    }
 
+    pedidoCompleto() {
+        this.add.text(155, 200, '¡COMPLETED!', { fontSize: '30px', fill: '#ff8000' });
+        this.time.delayedCall(2000, () => {
+            if (this.pedidoImagen) {
+                this.pedidoImagen.destroy();
+            }
+            if (this.pedidoTexto) {
+                this.pedidoTexto.destroy();
+            }
+        });
+
+        this.pedidoActual = null;
     }
 
     onRecolectableHitPlatform(recolectable, platform) {
@@ -228,6 +281,11 @@ export default class Game extends Phaser.Scene {
         if (type === 'OR') {
             this.popupOR.setVisible(true);
             this.backButton.setVisible(true);
+            if (this.pedidoActual) {
+                this.pedidoImagenOR.setTexture(this.pedidoActual.image).setVisible(true);
+                this.pedidoTextoOR.setText(`${this.pedidoActual.name}: ${this.pedidoActual.required}`).setVisible(true);
+            }
+
         } else if (type === 'RE') {
             this.popupRE.setVisible(true);
             this.backREButton.setVisible(true);
@@ -239,8 +297,11 @@ export default class Game extends Phaser.Scene {
         this.popupRE.setVisible(false);
         this.backButton.setVisible(false);
         this.backREButton.setVisible(false);
+        this.pedidoImagenOR.setVisible(false);
+        this.pedidoTextoOR.setVisible(false);
     }
 }
+
 
 
 
